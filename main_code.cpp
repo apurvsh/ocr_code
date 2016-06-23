@@ -2,16 +2,59 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <iostream>
+#include <fstream>
 
 using namespace cv;
 using namespace std;
 
 Mat image;
+struct Template{
+    char id;
+    int img[50][50];
+} ;
 
 //character recognition function
 void char_recognition(Mat ch)
 {
-
+    char rec1,rec2;
+    char filename[6];
+    Template x;
+    int count,max1=0,max2=0,t=0;
+    for (int i = 0; i < 62; ++i)
+    {
+        if(i<10){
+            filename[0]=i+'0';
+        }
+        else if(i<36){
+            filename[0]=i-10+'A';
+        }
+        else{
+            filename[0]=i-36+'a';
+        }
+        filename[1]='\0';
+        strcat(filename,".dat");
+        ifstream infile;
+        infile.open(filename,ios::in|ios::binary);
+        infile.seekg(0,ios::beg);
+        infile.read((char *)&x,sizeof(x));
+        count=0;
+        for (int j = 0; j < 50; ++j)
+        {
+            for (int k = 0; k < 50; ++k)
+            {
+                if((int(ch.at<uchar>(j,k))==255&&x.img[j][k]==1)||(int(ch.at<uchar>(j,k))==x.img[j][k])){
+                    count++;
+                }
+            }
+        }
+        if(count>max1){
+            rec2=rec1;
+            rec1=x.id;
+            max2=max1;
+            max1=count;
+        }
+    }
+    cout<<"\n"<<rec1<<"   "<<max1<<"    "<<rec2<<"    "<<max2;
 }
 
 //function to resize image to 50*50 pixels
@@ -99,7 +142,6 @@ int main( int argc, char** argv )
         for(x=0;x<image.cols;x++){
             for(int y=top[i];y<=bottom[i];y++){
                 if(flag==0 && image.at<uchar>(y,x)==255){
-                    cout<<"hell";
                     flag=1;
                     left=x;
                     count++;
@@ -122,18 +164,18 @@ int main( int argc, char** argv )
         character_resize(top[i],bottom[i],left,right);
     }
 
-    for (int i = 0; i < image.rows; ++i)
+    /*for (int i = 0; i < image.rows; ++i)
     {
         for (int j = 0; j < image.cols; ++j)
         {
             cout<<(int(image.at<uchar>(i,j))==255?1:0);
         }
         cout<<endl;
-    }
+    }*/
 
 
-    //namedWindow( "Display window", WINDOW_AUTOSIZE );// Create a window for display.
-    //imshow( "Display window", image );                   // Show our image inside it.
+    namedWindow( "Display window", WINDOW_AUTOSIZE );// Create a window for display.
+    imshow( "Display window", image );                   // Show our image inside it.
 
     waitKey(0);                                          // Wait for a keystroke in the window
     return 0;
